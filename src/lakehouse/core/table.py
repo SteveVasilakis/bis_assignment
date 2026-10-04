@@ -3,13 +3,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import StructType
 
 from lakehouse.config import LakehouseConfig
 from lakehouse.core.layers import Layer
-
 
 
 class Table(ABC):
