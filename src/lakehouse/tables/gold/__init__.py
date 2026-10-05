@@ -4,4 +4,5 @@ from lakehouse.tables.gold import (  # noqa: F401
     dim_customer,
     dim_product,
     fact_sales,
+    top_countries_by_customers,
 )
