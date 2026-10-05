@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from pyspark.sql import DataFrame
+from functools import reduce
+
+from pyspark.sql import DataFrame, Window
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType, StructField, StructType
 
-from lakehouse.core.layers import BRONZE
+from lakehouse.core.layers import BRONZE, SILVER
 from lakehouse.core.table import Table
 
 # Metadata columns every bronze schema carries next to the source columns.
@@ -44,4 +46,28 @@ class BronzeTable(Table):
         )
         return df.withColumn(ROW_ID, F.monotonically_increasing_id()).withColumn(
             INGESTED_AT, F.current_timestamp()
+        )
+
+
+class SilverTable(Table):
+    """
+    Clean, typed, one row per key. Upserted on merge_keys.
+    DQ: row-level rules. Bad rows are quarantined and the rest is published.
+    """
+
+    layer = SILVER
+    write_mode = "merge"
+
+    def latest(self, df: DataFrame) -> DataFrame:
+        """
+        Keep the most recent row per merge key (MERGE needs unique source keys).
+        "Most recent" = latest ingestion, then the last row in the file.
+        Rows with a NULL key pass through untouched so DQ can quarantine each one.
+        """
+        w = Window.partitionBy(*self.merge_keys).orderBy(F.desc(INGESTED_AT), F.desc(ROW_ID))
+        null_key = reduce(lambda a, b: a | b, [F.col(k).isNull() for k in self.merge_keys])
+        return (
+            df.withColumn("_rn", F.row_number().over(w))
+            .filter((F.col("_rn") == 1) | null_key)
+            .drop("_rn")
         )
