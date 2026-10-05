@@ -76,11 +76,10 @@ REVENUE_BY_COUNTRY = StructType(
 
 PRICE_VS_VOLUME = StructType(
     [
-        StructField("price_band", StringType()),
-        StructField("products", LongType()),
+        StructField("stock_code", StringType()),
+        StructField("description", StringType()),
+        StructField("avg_unit_price", DecimalType(10, 2)),
         StructField("units_sold", LongType()),
-        StructField("avg_units_per_product", DoubleType()),
-        StructField("price_volume_correlation", DoubleType()),  # Pearson over all products by the help of AI
     ]
 )
 
