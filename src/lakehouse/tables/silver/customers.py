@@ -6,7 +6,7 @@ from pyspark.sql import functions as F
 from lakehouse.core.bases import SilverTable
 from lakehouse.core.table import Table
 from lakehouse.tables.bronze.customers import BronzeCustomers
-from lakehouse.tables.silver import schemas
+from lakehouse.tables.silver import rules, schemas
 
 # Used AI for EIRE and RSA
 COUNTRY_NAMES = {
@@ -23,6 +23,7 @@ class SilverCustomers(SilverTable):
 
     table_name = "customers"
     schema = schemas.CUSTOMERS
+    rules = rules.CUSTOMERS
     dependencies = (BronzeCustomers,)
     merge_keys = ("customer_id",)
 

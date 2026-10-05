@@ -4,7 +4,7 @@ from pyspark.sql import functions as F
 from lakehouse.core.bases import SilverTable
 from lakehouse.core.table import Table
 from lakehouse.tables.bronze.orders import BronzeOrders
-from lakehouse.tables.silver import schemas
+from lakehouse.tables.silver import rules, schemas
 
 
 class SilverOrders(SilverTable):
@@ -12,6 +12,7 @@ class SilverOrders(SilverTable):
 
     table_name = "orders"
     schema = schemas.ORDERS
+    rules = rules.ORDERS
     dependencies = (BronzeOrders,)
     merge_keys = ("order_line_id",)
     partitioned_by = ("months(invoice_ts)",)
