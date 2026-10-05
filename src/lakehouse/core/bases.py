@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame, Window
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType, StructField, StructType
 
-from lakehouse.core.layers import BRONZE, SILVER
+from lakehouse.core.layers import BRONZE, GOLD, SILVER
 from lakehouse.core.table import Table
 
 # Metadata columns every bronze schema carries next to the source columns.
@@ -71,3 +71,13 @@ class SilverTable(Table):
             .filter((F.col("_rn") == 1) | null_key)
             .drop("_rn")
         )
+
+
+class GoldTable(Table):
+    """
+    Business tables, fully recomputed each run.
+    DQ: same as silver. Rows failing a rule are quarantined, the rest is published.
+    """
+
+    layer = GOLD
+    write_mode = "overwrite"
