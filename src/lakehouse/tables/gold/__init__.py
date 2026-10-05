@@ -5,4 +5,5 @@ from lakehouse.tables.gold import (  # noqa: F401
     dim_product,
     fact_sales,
     top_countries_by_customers,
+    revenue_by_country
 )
