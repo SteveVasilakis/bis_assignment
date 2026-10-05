@@ -6,7 +6,7 @@ from pyspark.sql import functions as F
 from lakehouse.core.bases import SilverTable
 from lakehouse.core.table import Table
 from lakehouse.tables.bronze.products import BronzeProducts
-from lakehouse.tables.silver import schemas
+from lakehouse.tables.silver import rules, schemas
 
 # Used AI to differentiate product type codes based on description
 PRODUCT_TYPE_BY_CODE = {
@@ -24,8 +24,16 @@ PRODUCT_TYPE_BY_CODE = {
 
 
 class SilverProducts(SilverTable):
+    """
+    One row per (stock_code, version). The file lists several prices per stock code and no
+    dates. A stock code's rows are its price history read from bottom (oldest) to top
+    (current), see assumption A1 in the docs. Rows with notes or no description stay in the
+    history; they are flagged by warn rules.
+    """
+
     table_name = "products"
     schema = schemas.PRODUCTS
+    rules = rules.PRODUCTS
     dependencies = (BronzeProducts,)
     merge_keys = ("stock_code", "version")
 

@@ -8,6 +8,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import StructType
 
 from lakehouse.config import LakehouseConfig
+from lakehouse.core.dq import Rule
 from lakehouse.core.layers import Layer
 
 
@@ -20,6 +21,8 @@ class Table(ABC):
     table_name: ClassVar[str]
     schema: ClassVar[StructType]
     dependencies: ClassVar[tuple[type[Table], ...]] = ()
+
+    rules: ClassVar[tuple[Rule, ...]] = ()
 
     write_mode: ClassVar[str] = "overwrite"  # "append" | "overwrite" | "merge"
     merge_keys: ClassVar[tuple[str, ...]] = ()

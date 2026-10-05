@@ -7,6 +7,7 @@ from pyspark.sql import SparkSession
 
 from lakehouse.config import LakehouseConfig
 from lakehouse.core.audit import RunLog, now
+from lakehouse.core.dq import DataQuality, evaluate
 from lakehouse.core.layers import LAYERS
 from lakehouse.core.table import Table
 
@@ -19,6 +20,7 @@ class Pipeline:
     def __init__(self, spark: SparkSession, config: LakehouseConfig) -> None:
         self.spark = spark
         self.config = config
+        self.dq = DataQuality(spark, config.catalog)
         self.run_log = RunLog(spark, config.catalog)
 
     # this method is product of AI,
@@ -39,6 +41,7 @@ class Pipeline:
         RuntimeError at the end if any table failed or was skipped.
         """
         run_id = run_id or f"{now():%Y%m%d%H%M%S}"
+        self.dq.setup()
         self.run_log.setup()
         failed: set[type[Table]] = set()
 
@@ -52,13 +55,16 @@ class Pipeline:
                 self.run_log.log(run_id, name, layer, "SKIPPED", started, message="upstream failed")
                 continue
             try:
-                total = self.build(table_cls)
+                total, quarantined = self.build(table_cls, run_id)
             except Exception as exc:
                 log.exception(f"Failed {name}")
                 failed.add(table_cls)
                 self.run_log.log(run_id, name, layer, "FAILED", started, message=str(exc))
             else:
-                self.run_log.log(run_id, name, layer, "SUCCESS", started, total, total, 0)
+                published = total - quarantined
+                self.run_log.log(
+                    run_id, name, layer, "SUCCESS", started, total, published, quarantined
+                )
 
         if failed:
             names = sorted(t.qualified_name() for t in failed)
@@ -66,20 +72,19 @@ class Pipeline:
         log.info(f"Run {run_id} succeeded")
         return run_id
 
-    def build(self, table_cls: type[Table]) -> int:
+    def build(self, table_cls: type[Table], run_id: str) -> tuple[int, int]:
         """
-        Build one table: compute, cast to the schema and write it.
-
-        Returns the number of rows written.
+        Build one table: compute, cast to the schema, check the rules, publish the good rows.
         """
         table = table_cls(self.spark, self.config)
         inputs = {dep: dep(self.spark, self.config).read() for dep in table_cls.dependencies}
         log.info(f"Building {table.full_name}")
 
-        df = table.enforce_schema(table.run(inputs)).cache()  # computed once, counted and written
+        df = table.enforce_schema(table.run(inputs))
+        tagged = evaluate(df, table.rules).cache()
         try:
-            total = df.count()
-            table.write(df)
+            total, quarantined = self.dq.audit(tagged, table, run_id)
+            table.write(DataQuality.passed(tagged))
         finally:
-            df.unpersist()
-        return total
+            tagged.unpersist()
+        return total, quarantined

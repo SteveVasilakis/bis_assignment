@@ -3,7 +3,7 @@ from pyspark.sql import functions as F
 
 from lakehouse.core.bases import GoldTable
 from lakehouse.core.table import Table
-from lakehouse.tables.gold import schemas
+from lakehouse.tables.gold import rules, schemas
 from lakehouse.tables.gold.dim_customer import GoldDimCustomer
 
 
@@ -14,7 +14,7 @@ class GoldTopCountriesByCustomers(GoldTable):
 
     table_name = "top_countries_by_customers"
     schema = schemas.TOP_COUNTRIES_BY_CUSTOMERS
-
+    rules = rules.TOP_COUNTRIES_BY_CUSTOMERS
     dependencies = (GoldDimCustomer,)
 
     def run(self, inputs: dict[type[Table], DataFrame]) -> DataFrame:
