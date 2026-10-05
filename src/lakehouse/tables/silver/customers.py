@@ -56,7 +56,9 @@ class SilverCustomers(SilverTable):
                 F.when(F.size("countries_arr") > 1, F.lit(MULTIPLE))
                 .otherwise(F.element_at("countries_arr", 1))
                 .alias("country"),
-                F.when(F.size("countries_arr") > 0, F.array_join("countries_arr", ", ")).alias("countries"),
+                F.when(F.size("countries_arr") > 0, F.array_join("countries_arr", ", ")).alias(
+                    "countries"
+                ),
                 "_source_file",
                 "_row_id",
                 "_ingested_at",
