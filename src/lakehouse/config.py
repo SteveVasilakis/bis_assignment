@@ -22,8 +22,6 @@ class LakehouseConfig:
         landing_dir: folder the source CSV files are read from.
         spark_master: Spark master URL, e.g. "local[*]".
         iceberg_package: Maven coordinates of the Iceberg Spark runtime.
-        price_history_anchor: month in which the current product prices become valid
-            (products.csv has no dates, see assumption A1 in docs/data_analysis.md).
     """
 
     env: str
@@ -34,7 +32,6 @@ class LakehouseConfig:
     landing_dir: str = str(PROJECT_ROOT / "assignment")
     spark_master: str = "local[*]"
     iceberg_package: str = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.7.1"
-    price_history_anchor: str = "2011-12-01"
 
 
 ENVIRONMENTS: dict[str, LakehouseConfig] = {

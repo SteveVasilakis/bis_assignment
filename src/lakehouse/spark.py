@@ -38,8 +38,6 @@ def create_spark(config: LakehouseConfig) -> SparkSession:
         .config("spark.sql.adaptive.enabled", "true")
         .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
         .config("spark.sql.adaptive.skewJoin.enabled", "true")
-        .config("spark.sql.sources.v2.bucketing.enabled", "true")
-        .config("spark.sql.iceberg.planning.preserve-data-grouping", "true")
     )
     if config.spark_master.startswith("local"):
         builder = builder.config("spark.driver.host", "127.0.0.1").config(
