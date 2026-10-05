@@ -216,3 +216,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Project specific ---
+.idea/
+# Local lakehouse data (landing zone + Iceberg warehouse) is generated, never committed
+data/landing/*
+!data/landing/.gitkeep
+data/warehouse/
+spark-warehouse/
+metastore_db/
+derby.log
+# JVM crash reports
+hs_err_pid*.log
+replay_pid*.log
