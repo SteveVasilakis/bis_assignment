@@ -3,7 +3,7 @@ from pyspark.sql import functions as F
 
 from lakehouse.core.bases import GoldTable
 from lakehouse.core.table import Table
-from lakehouse.tables.gold import schemas
+from lakehouse.tables.gold import rules, schemas
 from lakehouse.tables.gold.dim_product import GoldDimProduct
 from lakehouse.tables.silver.orders import SilverOrders
 
@@ -15,7 +15,7 @@ class GoldFactSales(GoldTable):
 
     table_name = "fact_sales"
     schema = schemas.FACT_SALES
-
+    rules = rules.FACT_SALES
     dependencies = (SilverOrders, GoldDimProduct)
 
     partitioned_by = ("months(invoice_ts)",)

@@ -3,7 +3,7 @@ from pyspark.sql import functions as F
 
 from lakehouse.core.bases import GoldTable
 from lakehouse.core.table import Table
-from lakehouse.tables.gold import schemas
+from lakehouse.tables.gold import rules, schemas
 from lakehouse.tables.silver.products import SilverProducts
 
 BEGINNING_OF_TIME = "1900-01-01"
@@ -18,7 +18,7 @@ class GoldDimProduct(GoldTable):
 
     table_name = "dim_product"
     schema = schemas.DIM_PRODUCT
-
+    rules = rules.DIM_PRODUCT
     dependencies = (SilverProducts,)
 
     def run(self, inputs: dict[type[Table], DataFrame]) -> DataFrame:

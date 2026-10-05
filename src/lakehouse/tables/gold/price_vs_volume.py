@@ -3,7 +3,7 @@ from pyspark.sql import functions as F
 
 from lakehouse.core.bases import GoldTable
 from lakehouse.core.table import Table
-from lakehouse.tables.gold import schemas
+from lakehouse.tables.gold import rules, schemas
 from lakehouse.tables.gold.dim_product import GoldDimProduct
 from lakehouse.tables.gold.fact_sales import GoldFactSales
 
@@ -15,7 +15,7 @@ class GoldPriceVsVolume(GoldTable):
 
     table_name = "price_vs_volume"
     schema = schemas.PRICE_VS_VOLUME
-
+    rules = rules.PRICE_VS_VOLUME
     dependencies = (GoldFactSales, GoldDimProduct)
 
     def run(self, inputs: dict[type[Table], DataFrame]) -> DataFrame:
