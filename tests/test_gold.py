@@ -36,6 +36,20 @@ def test_dim_customer_keeps_one_row_per_customer_without_lineage(spark, config):
     ]
 
 
+def silver_orders(spark):
+    rows = [  # invoice, stock code, qty, invoice time, customer, type
+        ("1", "A", 6, datetime(2010, 12, 1, 8), 1, "SALE"),
+        ("2", "A", 4, datetime(2011, 11, 20), 2, "SALE"),
+        ("3", "A", 10, datetime(2011, 12, 5), None, "SALE"),
+        ("C4", "A", -2, datetime(2011, 12, 6), 2, "CANCELLATION"),
+        ("C5", "BANK CHARGES", -1, datetime(2011, 12, 7), 1, "CANCELLATION"),
+        ("6", "A", -3, datetime(2011, 12, 7), None, "ADJUSTMENT"),
+    ]
+    return spark.createDataFrame(
+        [(f"line{i}", *r, "o.csv", i, TS) for i, r in enumerate(rows)], silver.ORDERS
+    )
+
+
 def dim_product(spark, config):
     rows = [  # stock_code, version (1 = oldest), description, raw, price, product_type
         ("A", 1, "PRODUCT A", None, D("2.00"), "MERCHANDISE"),
@@ -45,7 +59,13 @@ def dim_product(spark, config):
         ("C", 2, "PRODUCT C", "PRODUCT C", D("4.00"), "MERCHANDISE"),  # version 1 quarantined
     ]
     products = spark.createDataFrame([(*r, "p.csv", 0, TS) for r in rows], silver.PRODUCTS)
-    return build(GoldDimProduct, spark, config, {SilverProducts: products})
+    # The latest order is in December 2011, so the current prices are valid from 2011-12-01.
+    return build(
+        GoldDimProduct,
+        spark,
+        config,
+        {SilverProducts: products, SilverOrders: silver_orders(spark)},
+    )
 
 
 def test_dim_product_dates_versions_one_month_apart(spark, config):
@@ -64,22 +84,11 @@ def test_dim_product_dates_versions_one_month_apart(spark, config):
 
 
 def test_fact_sales_uses_price_valid_at_invoice_time(spark, config):
-    rows = [  # invoice, stock code, qty, invoice time, customer, type
-        ("1", "A", 6, datetime(2010, 12, 1, 8), 1, "SALE"),
-        ("2", "A", 4, datetime(2011, 11, 20), 2, "SALE"),
-        ("3", "A", 10, datetime(2011, 12, 5), None, "SALE"),
-        ("C4", "A", -2, datetime(2011, 12, 6), 2, "CANCELLATION"),
-        ("C5", "BANK CHARGES", -1, datetime(2011, 12, 7), 1, "CANCELLATION"),
-        ("6", "A", -3, datetime(2011, 12, 7), None, "ADJUSTMENT"),
-    ]
-    orders = spark.createDataFrame(
-        [(f"line{i}", *r, "o.csv", i, TS) for i, r in enumerate(rows)], silver.ORDERS
-    )
     fact = build(
         GoldFactSales,
         spark,
         config,
-        {SilverOrders: orders, GoldDimProduct: dim_product(spark, config)},
+        {SilverOrders: silver_orders(spark), GoldDimProduct: dim_product(spark, config)},
     )
     got = {
         r["invoice_no"]: (r["unit_price"], r["line_amount"], r["is_revenue"])

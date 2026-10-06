@@ -51,7 +51,8 @@
 ## Assumptions
 
 - **A1.** A stock code's rows are its price history, bottom = oldest, top = current. Each
-  change is one month after the previous one; the current price is valid from December 2011.
+  change is one month after the previous one; the current price is valid from the month of
+  the latest order (December 2011).
 - **A2.** Revenue = goods and delivery charged to customers, minus cancellations and discounts,
   at the price valid on the invoice date. Fees, bad debt, samples, vouchers and stock
   adjustments are excluded.
