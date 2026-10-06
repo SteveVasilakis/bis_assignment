@@ -46,8 +46,9 @@ erDiagram
 
 ## Price dating
 
-The current price (top row of the file) is valid from 2011-12-01, each older price one month
-earlier, the oldest from 1900-01-01. Example, product 10080:
+The current price (top row of the file) is valid from the month of the latest order
+(2011-12-01 for this data), each older price one month earlier, the oldest from 1900-01-01.
+Example, product 10080:
 
 | File line | Description | Price | Valid from | Valid to |
 |---:|---|---:|---|---|
